@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import SearchBar from "./SearchBar.vue";
 import SchoolCard from "./SchoolCard.vue";
 import Loader from "./Loader.vue";
@@ -11,30 +11,15 @@ const schools = ref([]);
 const loading = ref(false);
 const error = ref(false);
 const errorMessage = ref("");
-const page = ref(1);
-const pageSize = 20; 
-const totalPages = ref(null);
 
-const canLoadMore = computed(() => totalPages.value && page.value < totalPages.value);
-
-async function load({ reset = false } = {}) {
+async function load() {
   loading.value = true;
   error.value = false;
   errorMessage.value = "";
 
   try {
-    const data = await fetchSchools({
-      search: searchTerm.value || "",
-      page: page.value,
-      pageSize,
-    });
-
-    const list = Array.isArray(data?.school_list) ? data.school_list : [];
-
-    if (reset) schools.value = list;
-    else schools.value.push(...list);
-
-    totalPages.value = data?.page_info?.total_page || page.value;
+    const data = await fetchSchools({ search: searchTerm.value || "" });
+    schools.value = Array.isArray(data?.school_list) ? data.school_list : [];
   } catch (err) {
     error.value = true;
     errorMessage.value = err?.message || "Unable to fetch schools. Please try again.";
@@ -44,17 +29,11 @@ async function load({ reset = false } = {}) {
   }
 }
 
-function loadMore() {
-  page.value += 1;
-  load();
-}
-
 watch(searchTerm, () => {
-  page.value = 1;
-  load({ reset: true });
+  load();
 });
 
-onMounted(() => load({ reset: true }));
+onMounted(() => load());
 </script>
 
 <template>
@@ -86,15 +65,6 @@ onMounted(() => load({ reset: true }));
           <strong class="text-gray-700 dark:text-gray-200">{{ searchTerm }}</strong>
         </p>
       </div>
-    </div>
-
-    <div v-if="canLoadMore && !loading && !error" class="flex justify-center mt-8">
-      <button
-        @click="loadMore"
-        class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
-      >
-        Load More
-      </button>
     </div>
   </section>
 </template>

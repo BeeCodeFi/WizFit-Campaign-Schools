@@ -17,6 +17,11 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem("authToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;
+      console.info(
+        "[Auth] No auth token found — sending request without Authorization header"
+      );
     }
 
     return config;
